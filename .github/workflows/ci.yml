@@ -1,0 +1,118 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  PYTHON_VERSION: "3.11"
+  NODE_VERSION: "20"
+
+jobs:
+  backend:
+    name: Backend (lint, typecheck, test)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: wattwise
+          POSTGRES_PASSWORD: wattwise
+          POSTGRES_DB: wattwise_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U wattwise"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: backend/requirements-dev.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Ruff
+        run: ruff check app tests
+
+      - name: Black
+        run: black --check app tests
+
+      - name: mypy
+        run: mypy app
+
+      - name: Run migrations
+        env:
+          SYNC_DATABASE_URL: postgresql+psycopg://wattwise:wattwise@localhost:5432/wattwise_test
+        run: alembic upgrade head
+
+      - name: pytest
+        env:
+          DATABASE_URL: postgresql+asyncpg://wattwise:wattwise@localhost:5432/wattwise_test
+          SYNC_DATABASE_URL: postgresql+psycopg://wattwise:wattwise@localhost:5432/wattwise_test
+          JWT_SECRET: ci-test-secret
+          INTERNAL_API_SECRET: ci-test-internal-secret
+        run: pytest --cov=app --cov-report=term-missing --cov-fail-under=70
+
+  frontend:
+    name: Frontend (lint, typecheck, test, build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Prettier check
+        run: npm run format:check
+
+      - name: Vitest
+        run: npx vitest run
+
+      - name: Build
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8000
+          NEXTAUTH_URL: http://localhost:3000
+          NEXTAUTH_SECRET: ci-build-secret
+          INTERNAL_API_SECRET: ci-build-internal-secret
+        run: npm run build
+
+  ml-validation:
+    name: ML model validation
+    runs-on: ubuntu-latest
+    if: false # enabled once /ml/train_all.py and validation scripts land in Phase 2
+    defaults:
+      run:
+        working-directory: ml
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Validate model performance thresholds
+        run: python validate_models.py

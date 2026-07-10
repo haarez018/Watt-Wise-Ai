@@ -1,0 +1,65 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ["--maxkb=1000"]
+      - id: check-yaml
+      - id: detect-private-key
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.4
+    hooks:
+      - id: ruff
+        args: ["--fix"]
+        files: ^backend/
+
+  - repo: https://github.com/psf/black
+    rev: 24.10.0
+    hooks:
+      - id: black
+        files: ^backend/
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.14.1
+    hooks:
+      - id: mypy
+        files: ^backend/app/
+        additional_dependencies:
+          - fastapi==0.115.6
+          - sqlalchemy==2.0.36
+          - pydantic==2.10.4
+          - pydantic-settings==2.7.1
+          - pyjwt==2.10.1
+          - passlib==1.7.4
+          - structlog==24.4.0
+          - sentry-sdk==2.19.2
+          - slowapi==0.1.9
+          - types-passlib==1.7.7.20241221
+        args: ["--config-file=backend/pyproject.toml"]
+
+  - repo: local
+    hooks:
+      - id: frontend-lint
+        name: frontend eslint
+        entry: bash -c 'cd frontend && npm run lint'
+        language: system
+        files: ^frontend/.*\.(ts|tsx)$
+        pass_filenames: false
+      - id: frontend-typecheck
+        name: frontend typecheck
+        entry: bash -c 'cd frontend && npm run typecheck'
+        language: system
+        files: ^frontend/.*\.(ts|tsx)$
+        pass_filenames: false
+      - id: frontend-format
+        name: frontend prettier
+        entry: >-
+          bash -c 'cd frontend && files=(); for f in "$@"; do
+          files+=("${f#frontend/}"); done;
+          node node_modules/prettier/bin/prettier.cjs --write "${files[@]}"' --
+        language: system
+        files: ^frontend/.*\.(ts|tsx|js|jsx|json|css|md)$
