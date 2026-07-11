@@ -15,7 +15,10 @@ class Appliance(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
     __tablename__ = "appliances"
 
     household_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("households.id"), nullable=False, index=True
+        UUID(as_uuid=True),
+        ForeignKey("households.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     category: Mapped[str] = mapped_column(String(50), nullable=False)
     label: Mapped[str | None] = mapped_column(String(100), nullable=True)

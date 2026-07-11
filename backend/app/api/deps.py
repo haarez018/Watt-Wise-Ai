@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_db
 from app.core.security import InvalidTokenError, decode_token
+from app.models.household import Household
 from app.models.user import User
 
 _bearer_scheme = HTTPBearer(auto_error=False)
@@ -38,3 +39,26 @@ async def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found or inactive"
         )
     return user
+
+
+async def get_owned_household(
+    household_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db_session),
+) -> Household:
+    """Loads a household by ID, scoped to the authenticated user's ownership.
+
+    Returns 404 (never 403) on a mismatch, so a household's existence isn't leaked
+    to a user who doesn't own it.
+    """
+    result = await db.execute(
+        select(Household).where(
+            Household.id == household_id,
+            Household.owner_id == current_user.id,
+            Household.deleted_at.is_(None),
+        )
+    )
+    household = result.scalar_one_or_none()
+    if household is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Household not found")
+    return household

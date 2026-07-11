@@ -28,6 +28,10 @@ class Settings(BaseSettings):
         default="dev-internal-secret-change-me",
         description="Shared secret for server-to-server calls from NextAuth (e.g. OAuth exchange).",
     )
+    metrics_token: str = Field(
+        default="dev-metrics-token-change-me",
+        description="Required X-Metrics-Token header value to read /metrics.",
+    )
     jwt_algorithm: str = Field(default="HS256")
     access_token_expire_minutes: int = Field(default=30)
     refresh_token_expire_days: int = Field(default=30)

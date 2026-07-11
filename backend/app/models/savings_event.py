@@ -2,7 +2,7 @@ import uuid
 from datetime import date
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Date, ForeignKey, Integer
+from sqlalchemy import BigInteger, Date, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -18,13 +18,16 @@ class SavingsEvent(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
     __tablename__ = "savings_events"
 
     household_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("households.id"), nullable=False, index=True
+        UUID(as_uuid=True),
+        ForeignKey("households.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     recommendation_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("recommendations.id"), nullable=True
+        UUID(as_uuid=True), ForeignKey("recommendations.id", ondelete="SET NULL"), nullable=True
     )
     observed_month: Mapped[date] = mapped_column(Date, nullable=False)
-    savings_paise: Mapped[int] = mapped_column(Integer, nullable=False)
+    savings_paise: Mapped[int] = mapped_column(BigInteger, nullable=False)
     co2_avoided_kg: Mapped[float] = mapped_column(nullable=False)
 
     household: Mapped["Household"] = relationship()

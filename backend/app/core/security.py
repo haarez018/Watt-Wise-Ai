@@ -29,25 +29,31 @@ class TokenPayload(BaseModel):
 
 def _create_token(
     subject: uuid.UUID, token_type: Literal["access", "refresh"], expires_delta: timedelta
-) -> str:
+) -> tuple[str, str, datetime]:
     settings = get_settings()
     now = datetime.now(UTC)
+    jti = str(uuid.uuid4())
     payload = {
         "sub": str(subject),
         "type": token_type,
         "iat": now,
         "exp": now + expires_delta,
-        "jti": str(uuid.uuid4()),
+        "jti": jti,
     }
-    return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
+    token = jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
+    return token, jti, now
 
 
 def create_access_token(subject: uuid.UUID) -> str:
     settings = get_settings()
-    return _create_token(subject, "access", timedelta(minutes=settings.access_token_expire_minutes))
+    token, _jti, _issued_at = _create_token(
+        subject, "access", timedelta(minutes=settings.access_token_expire_minutes)
+    )
+    return token
 
 
-def create_refresh_token(subject: uuid.UUID) -> str:
+def create_refresh_token(subject: uuid.UUID) -> tuple[str, str, datetime]:
+    """Returns (token, jti, issued_at) so the caller can persist a RefreshToken row."""
     settings = get_settings()
     return _create_token(subject, "refresh", timedelta(days=settings.refresh_token_expire_days))
 

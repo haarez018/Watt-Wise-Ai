@@ -1,4 +1,5 @@
 import NextAuth from "next-auth";
+import type { Provider } from "next-auth/providers";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 
@@ -44,41 +45,62 @@ async function refreshBackendToken(refreshToken: string): Promise<BackendTokenPa
   return (await response.json()) as BackendTokenPair;
 }
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
-  session: { strategy: "jwt" },
-  pages: { signIn: "/login" },
-  providers: [
-    Credentials({
-      credentials: { email: {}, password: {} },
-      async authorize(credentials) {
-        const email = credentials?.email;
-        const password = credentials?.password;
-        if (typeof email !== "string" || typeof password !== "string") return null;
+async function revokeBackendRefreshToken(refreshToken: string): Promise<void> {
+  try {
+    await fetch(`${API_BASE_URL}/auth/logout`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+  } catch {
+    // Best-effort: the token still expires naturally even if this call fails.
+  }
+}
 
-        const response = await fetch(`${API_BASE_URL}/auth/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
-        });
-        if (!response.ok) return null;
+const providers: Provider[] = [
+  Credentials({
+    credentials: { email: {}, password: {} },
+    async authorize(credentials) {
+      const email = credentials?.email;
+      const password = credentials?.password;
+      if (typeof email !== "string" || typeof password !== "string") return null;
 
-        const tokens = (await response.json()) as BackendTokenPair;
-        const backendUser = await fetchBackendUser(tokens.access_token);
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      if (!response.ok) return null;
 
-        return {
-          id: backendUser.id,
-          email: backendUser.email,
-          name: backendUser.full_name,
-          accessToken: tokens.access_token,
-          refreshToken: tokens.refresh_token,
-        };
-      },
-    }),
+      const tokens = (await response.json()) as BackendTokenPair;
+      const backendUser = await fetchBackendUser(tokens.access_token);
+
+      return {
+        id: backendUser.id,
+        email: backendUser.email,
+        name: backendUser.full_name,
+        accessToken: tokens.access_token,
+        refreshToken: tokens.refresh_token,
+      };
+    },
+  }),
+];
+
+// Only register Google when both credentials are configured — keeps `next build`
+// from depending on OAuth secrets being present, and lets self-hosters skip Google.
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  providers.push(
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     }),
-  ],
+  );
+}
+
+export const { handlers, auth, signIn, signOut } = NextAuth({
+  session: { strategy: "jwt" },
+  pages: { signIn: "/login" },
+  providers,
   callbacks: {
     async jwt({ token, user, account }) {
       if (user && account?.provider === "credentials") {
@@ -131,6 +153,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       session.accessToken = token.accessToken as string;
       session.error = token.error as string | undefined;
       return session;
+    },
+  },
+  events: {
+    async signOut(message) {
+      const refreshToken = "token" in message ? (message.token?.refreshToken as string) : undefined;
+      if (refreshToken) await revokeBackendRefreshToken(refreshToken);
     },
   },
 });

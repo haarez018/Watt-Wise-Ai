@@ -3,16 +3,16 @@ from contextlib import asynccontextmanager
 
 import sentry_sdk
 import structlog
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Header, HTTPException, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from prometheus_fastapi_instrumentator import Instrumentator
-from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app.api.routes import auth, system
+from app.api.routes import auth, households, system
 from app.core.config import get_settings
 from app.core.limiter import limiter
 from app.core.logging import configure_logging
@@ -41,7 +41,6 @@ app = FastAPI(
 )
 
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
 
 app.add_middleware(RequestContextMiddleware)
 app.add_middleware(
@@ -80,7 +79,28 @@ async def validation_exception_handler(
     return _problem_detail(422, "Validation Error", str(exc.errors()), request)
 
 
-Instrumentator().instrument(app).expose(app, endpoint="/metrics", include_in_schema=False)
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
+    return _problem_detail(429, "Rate Limit Exceeded", str(exc.detail), request)
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    logger.error("unhandled_exception", exc_info=exc, path=request.url.path)
+    return _problem_detail(500, "Internal Server Error", "An unexpected error occurred.", request)
+
+
+Instrumentator().instrument(app)
+
+
+@app.get("/metrics", include_in_schema=False)
+async def metrics(x_metrics_token: str | None = Header(default=None)) -> Response:
+    """Prometheus scrape endpoint. Gated by a shared token, not publicly scrapable."""
+    if x_metrics_token != settings.metrics_token:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
 
 app.include_router(system.router)
 app.include_router(auth.router)
+app.include_router(households.router)

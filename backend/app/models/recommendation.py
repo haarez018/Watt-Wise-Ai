@@ -2,7 +2,7 @@ import uuid
 from datetime import date
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Date, ForeignKey, Integer, String, Text
+from sqlalchemy import BigInteger, Date, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -18,12 +18,15 @@ class Recommendation(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base)
     __tablename__ = "recommendations"
 
     household_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("households.id"), nullable=False, index=True
+        UUID(as_uuid=True),
+        ForeignKey("households.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     category: Mapped[str] = mapped_column(String(50), nullable=False)
     title: Mapped[str] = mapped_column(String(200), nullable=False)
     explanation: Mapped[str] = mapped_column(Text, nullable=False)
-    estimated_savings_paise_per_month: Mapped[int] = mapped_column(Integer, nullable=False)
+    estimated_savings_paise_per_month: Mapped[int] = mapped_column(BigInteger, nullable=False)
     estimated_co2_kg_per_year: Mapped[float] = mapped_column(nullable=False)
     calculation_method: Mapped[str] = mapped_column(Text, nullable=False)
     rank: Mapped[int] = mapped_column(Integer, nullable=False)
