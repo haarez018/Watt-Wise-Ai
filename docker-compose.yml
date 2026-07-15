@@ -18,8 +18,8 @@ services:
 
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile.dev
+      context: .
+      dockerfile: backend/Dockerfile.dev
     restart: unless-stopped
     env_file:
       - ./backend/.env
@@ -30,6 +30,7 @@ services:
       - "8000:8000"
     volumes:
       - ./backend:/app
+      - ./libs:/libs
     depends_on:
       postgres:
         condition: service_healthy

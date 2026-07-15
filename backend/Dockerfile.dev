@@ -1,3 +1,7 @@
+# Build context must be the repo root, not backend/ — see backend/Dockerfile's
+# comment. docker-compose.yml sets context/dockerfile accordingly and mounts
+# ./libs:/libs alongside ./backend:/app so edits to the shared packages are
+# also live-reloaded in dev, matching how backend/'s own volume mount works.
 FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -10,7 +14,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt requirements-dev.txt ./
+COPY backend/requirements.txt backend/requirements-dev.txt ./
+COPY libs/ /libs/
 RUN pip install --no-cache-dir -r requirements-dev.txt
 
 EXPOSE 8000

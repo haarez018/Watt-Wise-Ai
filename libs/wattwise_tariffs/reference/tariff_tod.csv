@@ -1,0 +1,4 @@
+block_name,start_hour,end_hour,rate_multiplier,assumed_load_share
+solar_offpeak,9,17,0.85,0.35
+peak,18,22,1.30,0.30
+normal,22,9,1.00,0.35

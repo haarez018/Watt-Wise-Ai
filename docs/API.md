@@ -91,6 +91,17 @@ Readiness probe. Runs `SELECT 1` against Postgres; returns `503`-equivalent fail
 Prometheus-format metrics (request counts, latencies) via
 `prometheus-fastapi-instrumentator`. Not included in the OpenAPI schema.
 
+## Endpoints implemented (Phase 2, ahead of schedule)
+
+Model serving needed one real endpoint wired end-to-end to prove the
+`ModelRegistry` pattern before Phase 3's full API lands — see
+`ml/MODELS.md`'s Model 4 sections and `app/core/model_registry.py`.
+
+| Method & path | Purpose |
+|---|---|
+| `GET /households/{id}` | Fetch a household (owner-scoped) |
+| `GET /households/{id}/forecast` | Next-month prediction (`predicted_units_wh`, `predicted_amount_paise`, 80% prediction interval), owner-scoped. 400 if fewer than 3 bills exist; 503 if the model registry failed to load. |
+
 ## Endpoints planned (Phase 3)
 
 These are designed in `PROBLEM_STATEMENT.md` and the household/bill/appliance models
@@ -99,11 +110,9 @@ already exist in the database; the routes themselves land in Phase 3:
 | Method & path | Purpose |
 |---|---|
 | `POST /households` | Create a household profile |
-| `GET /households/{id}` | Fetch a household (owner-scoped) |
 | `PATCH /households/{id}` | Update household profile / appliance inventory |
 | `POST /households/{id}/bills` | Add a bill |
 | `GET /households/{id}/bills` | List bill history |
-| `GET /households/{id}/forecast` | Next-month prediction with confidence interval |
 | `GET /households/{id}/breakdown` | Appliance-level disaggregation for a given month |
 | `GET /households/{id}/anomalies` | Flagged anomalies with plain-language explanations |
 | `GET /households/{id}/recommendations` | Ranked, ₹/CO₂-quantified actions |

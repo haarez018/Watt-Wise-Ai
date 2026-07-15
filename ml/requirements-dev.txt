@@ -1,0 +1,6 @@
+-r requirements.txt
+pytest-cov==6.0.0
+ruff==0.8.4
+black==24.10.0
+mypy==1.14.1
+pandas-stubs==3.0.3.260530

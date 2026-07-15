@@ -1,0 +1,36 @@
+# Backend's build context is now the repo root (see backend/Dockerfile's
+# comment — it needs libs/ alongside backend/), so this needs to exclude
+# everything not needed for that build, not just backend/'s own artifacts.
+
+.git/
+
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/coverage/
+frontend/playwright-report/
+frontend/test-results/
+
+backend/.venv/
+backend/venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.egg-info/
+backend/.pytest_cache/
+backend/.mypy_cache/
+backend/.ruff_cache/
+backend/htmlcov/
+backend/.coverage
+backend/.env
+
+ml/
+
+libs/**/__pycache__/
+libs/**/*.egg-info/
+libs/**/.pytest_cache/
+libs/**/.mypy_cache/
+libs/**/.ruff_cache/
+
+*.log
+.DS_Store
+Thumbs.db

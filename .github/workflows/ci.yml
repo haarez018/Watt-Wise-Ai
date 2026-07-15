@@ -102,17 +102,67 @@ jobs:
           INTERNAL_API_SECRET: ci-build-internal-secret
         run: npm run build
 
-  ml-validation:
-    name: ML model validation
+  ml:
+    name: ML (lint, typecheck, test, validate model thresholds)
     runs-on: ubuntu-latest
-    if: false # enabled once /ml/train_all.py and validation scripts land in Phase 2
     defaults:
       run:
         working-directory: ml
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
-      - name: Validate model performance thresholds
-        run: python validate_models.py
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: ml/requirements-dev.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Ruff (ml)
+        run: ruff check data features models evaluation tests train_all.py
+
+      - name: Black (ml)
+        run: black --check data features models evaluation tests train_all.py
+
+      - name: mypy (ml)
+        run: mypy data features models evaluation train_all.py
+
+      - name: pytest (ml)
+        run: pytest
+
+      - name: Ruff (libs/wattwise_tariffs)
+        working-directory: libs/wattwise_tariffs
+        run: ruff check wattwise_tariffs tests
+
+      - name: Black (libs/wattwise_tariffs)
+        working-directory: libs/wattwise_tariffs
+        run: black --check wattwise_tariffs tests
+
+      - name: mypy (libs/wattwise_tariffs)
+        working-directory: libs/wattwise_tariffs
+        run: mypy wattwise_tariffs
+
+      - name: pytest (libs/wattwise_tariffs)
+        working-directory: libs/wattwise_tariffs
+        run: pytest
+
+      - name: Ruff (libs/wattwise_climate)
+        working-directory: libs/wattwise_climate
+        run: ruff check wattwise_climate tests
+
+      - name: Black (libs/wattwise_climate)
+        working-directory: libs/wattwise_climate
+        run: black --check wattwise_climate tests
+
+      - name: mypy (libs/wattwise_climate)
+        working-directory: libs/wattwise_climate
+        run: mypy wattwise_climate
+
+      - name: pytest (libs/wattwise_climate)
+        working-directory: libs/wattwise_climate
+        run: pytest
+
+      - name: Validate committed model artifacts against thresholds
+        run: python -m evaluation.validate

@@ -1,0 +1,132 @@
+{
+  "generated_at": "2026-07-15T08:56:05.897598+00:00",
+  "trained_from_commit": "f144c24e238b53b8f6e2cdd8c7a32a507d1ea88b",
+  "models": {
+    "forecaster": {
+      "version": "forecaster_v1",
+      "sha256": "6923f03d314b439c122a1327213e0c4958cdb499172ce7e7dad32d3868530bb1",
+      "metrics": {
+        "mape_percent": 5.757786349394703,
+        "mape_threshold_percent": 12.0,
+        "mape_pass": true,
+        "pi80_coverage": 0.7981111111111111,
+        "pi80_coverage_band": [
+          0.75,
+          0.85
+        ],
+        "pi80_pass": true,
+        "n_train_examples": 72000,
+        "n_test_examples": 18000,
+        "n_train_households": 8000,
+        "n_test_households": 2000
+      }
+    },
+    "anomaly": {
+      "version": "anomaly_v1",
+      "sha256": "e17e71a418b9580a5e2e3ec21f9fb5d7c442f0a4f6ebde3c4963b6f8ddf7f413",
+      "metrics": {
+        "precision": 0.825065274151436,
+        "precision_threshold": 0.8,
+        "precision_pass": true,
+        "recall": 0.9376854599406528,
+        "recall_threshold": 0.6,
+        "recall_pass": true,
+        "reason_bucket_accuracy_on_detected_anomalies": 0.8212025316455697,
+        "z_threshold_chosen_on_validation": 7.5,
+        "n_fit_examples": 54000,
+        "n_validation_examples": 18000,
+        "n_test_examples": 18000,
+        "n_test_anomalies": 674,
+        "true_positive": 632,
+        "false_positive": 134,
+        "false_negative": 42
+      }
+    },
+    "disaggregator": {
+      "version": "disaggregator_v1",
+      "sha256": "74e036966e3ea1f257e4f3baafb5d69c5bed445093aa734925fdaf4803717be1",
+      "metrics": {
+        "mae_threshold_percentage_points": 5.0,
+        "full_model": {
+          "mae_per_category_pp": {
+            "fridge": 0.284190261904983,
+            "ac": 0.22986172448382675,
+            "geyser": 0.19495074370415208,
+            "lighting": 0.1462075614047036,
+            "fans": 0.6867173400561289,
+            "washing_machine": 0.08769552225018652,
+            "television_entertainment": 0.14956005998798752,
+            "other_including_standby": 0.7366612920125647
+          },
+          "mean_mae_pp": 0.31448056322556667,
+          "signed_error_per_category_pp": {
+            "fridge": 0.000490436731127263,
+            "ac": -0.022859592197528932,
+            "geyser": -0.0009715118075773553,
+            "lighting": 0.0005368280660748573,
+            "fans": 0.011615725209991393,
+            "washing_machine": -0.0001178149596139264,
+            "television_entertainment": 0.007406342773286045,
+            "other_including_standby": 0.0038995715020619113
+          },
+          "all_categories_pass": true
+        },
+        "ablated_model_no_appliance_inventory": {
+          "mae_per_category_pp": {
+            "fridge": 2.8922098337763638,
+            "ac": 0.9053076934524242,
+            "geyser": 4.7397244597909856,
+            "lighting": 1.357550209997616,
+            "fans": 6.127550012174364,
+            "washing_machine": 4.905957977226062,
+            "television_entertainment": 1.8292739176187651,
+            "other_including_standby": 0.7510235509848336
+          },
+          "mean_mae_pp": 2.938574706877677,
+          "all_categories_pass": false
+        },
+        "naive_population_mean_baseline": {
+          "mae_per_category_pp": {
+            "fridge": 6.109676653885435,
+            "ac": 14.448861685357278,
+            "geyser": 7.991948041158879,
+            "lighting": 2.328932255425013,
+            "fans": 11.398028624126175,
+            "washing_machine": 5.337524435326113,
+            "television_entertainment": 3.8507080827227793,
+            "other_including_standby": 0.7474210891227138
+          },
+          "mean_mae_pp": 6.526637608390548
+        },
+        "synthetic_construction_advantage_pp": 2.62409414365211,
+        "n_train_examples": 96000,
+        "n_test_examples": 24000
+      }
+    },
+    "recommender": {
+      "version": "recommender_v1",
+      "sha256": "ea5104ed59ed2ba3b6ce5c646caa3bb84c8216058a482dd7daecbce368093449",
+      "metrics": {
+        "n_households_evaluated": 9203,
+        "oracle_mean_coverage": 0.9321094334791573,
+        "learned_mean_coverage": 0.9269719743548432,
+        "naive_mean_coverage": 0.926060576295757,
+        "learned_coverage_pass": true,
+        "low_confidence_recommendations_shown": 4653,
+        "low_confidence_recommendations_per_1000_households": 505.59600130392266,
+        "coverage_threshold_percent": 70.0,
+        "ood_stress_test": {
+          "zone": "cold",
+          "n_train_households_in_zone": 1084,
+          "n_households_evaluated": 1074,
+          "oracle_mean_coverage": 0.9470991698433764,
+          "learned_mean_coverage": 0.9427224652020727,
+          "naive_mean_coverage": 0.9423748089173768,
+          "learned_coverage_pass": true,
+          "low_confidence_recommendations_shown": 544,
+          "low_confidence_recommendations_per_1000_households": 506.5176908752328
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,52 @@
+city,state,zone
+Ahmedabad,Gujarat,hot_dry
+Jaipur,Rajasthan,hot_dry
+Jodhpur,Rajasthan,hot_dry
+Bikaner,Rajasthan,hot_dry
+Nagpur,Maharashtra,hot_dry
+Bhopal,Madhya Pradesh,hot_dry
+Indore,Madhya Pradesh,hot_dry
+Gwalior,Madhya Pradesh,hot_dry
+Ajmer,Rajasthan,hot_dry
+Mumbai,Maharashtra,warm_humid
+Kochi,Kerala,warm_humid
+Panaji,Goa,warm_humid
+Mangalore,Karnataka,warm_humid
+Thiruvananthapuram,Kerala,warm_humid
+Surat,Gujarat,warm_humid
+Kolkata,West Bengal,warm_humid
+Kozhikode,Kerala,warm_humid
+Delhi,Delhi,composite
+Lucknow,Uttar Pradesh,composite
+Kanpur,Uttar Pradesh,composite
+Patna,Bihar,composite
+Varanasi,Uttar Pradesh,composite
+Agra,Uttar Pradesh,composite
+Amritsar,Punjab,composite
+Chandigarh,Chandigarh,composite
+Ludhiana,Punjab,composite
+Ranchi,Jharkhand,composite
+Hyderabad,Telangana,composite
+Bangalore,Karnataka,temperate
+Pune,Maharashtra,temperate
+Mysore,Karnataka,temperate
+Coimbatore,Tamil Nadu,temperate
+Ooty,Tamil Nadu,temperate
+Nashik,Maharashtra,temperate
+Shimoga,Karnataka,temperate
+Salem,Tamil Nadu,temperate
+Srinagar,Jammu and Kashmir,cold
+Shimla,Himachal Pradesh,cold
+Leh,Ladakh,cold
+Dehradun,Uttarakhand,cold
+Manali,Himachal Pradesh,cold
+Gangtok,Sikkim,cold
+Darjeeling,West Bengal,cold
+Chennai,Tamil Nadu,hot_humid_coastal
+Visakhapatnam,Andhra Pradesh,hot_humid_coastal
+Bhubaneswar,Odisha,hot_humid_coastal
+Puducherry,Puducherry,hot_humid_coastal
+Puri,Odisha,hot_humid_coastal
+Kakinada,Andhra Pradesh,hot_humid_coastal
+Rajahmundry,Andhra Pradesh,hot_humid_coastal
+Nellore,Andhra Pradesh,hot_humid_coastal

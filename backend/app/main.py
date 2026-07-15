@@ -17,6 +17,7 @@ from app.core.config import get_settings
 from app.core.limiter import limiter
 from app.core.logging import configure_logging
 from app.core.middleware import RequestContextMiddleware
+from app.core.model_registry import model_registry
 
 settings = get_settings()
 configure_logging(settings.log_level)
@@ -28,7 +29,14 @@ if settings.sentry_dsn:
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
-    logger.info("app_startup", env=settings.env)
+    # Models are loaded eagerly at `app.core.model_registry` import time, not
+    # here — see that module's docstring for why. This just logs the result.
+    if model_registry.is_ready:
+        logger.info("app_startup", env=settings.env, models_ready=True)
+    else:
+        logger.error(
+            "app_startup", env=settings.env, models_ready=False, error=model_registry.load_error
+        )
     yield
     logger.info("app_shutdown")
 

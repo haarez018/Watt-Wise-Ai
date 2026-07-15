@@ -1,4 +1,5 @@
 import uuid
+from datetime import date
 from typing import TYPE_CHECKING
 
 from sqlalchemy import BigInteger, Date, ForeignKey, String
@@ -22,8 +23,8 @@ class Bill(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
         nullable=False,
         index=True,
     )
-    billing_period_start: Mapped[Date] = mapped_column(Date, nullable=False)
-    billing_period_end: Mapped[Date] = mapped_column(Date, nullable=False)
+    billing_period_start: Mapped[date] = mapped_column(Date, nullable=False)
+    billing_period_end: Mapped[date] = mapped_column(Date, nullable=False)
     units_consumed_wh: Mapped[int] = mapped_column(BigInteger, nullable=False)
     amount_paise: Mapped[int] = mapped_column(BigInteger, nullable=False)
     source: Mapped[str] = mapped_column(String(20), nullable=False, default="manual")

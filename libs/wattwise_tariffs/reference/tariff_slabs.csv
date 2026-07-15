@@ -1,0 +1,8 @@
+tariff_name,slab_order,min_units,max_units,rate_rupees_per_unit
+tneb,1,1,100,0.00
+tneb,2,101,200,4.70
+tneb,3,201,300,6.30
+tneb,4,301,500,8.50
+tneb,5,501,,11.55
+bescom,1,1,200,0.00
+bescom,2,201,,6.82

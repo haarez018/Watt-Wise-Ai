@@ -1,0 +1,27 @@
+[project]
+name = "wattwise-ml"
+version = "0.1.0"
+description = "WattWise AI training pipeline: synthetic dataset + self-trained models"
+requires-python = ">=3.11"
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["data", "features", "models", "evaluation", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "C4"]
+ignore = ["B008"]
+
+[tool.mypy]
+python_version = "3.11"
+disallow_untyped_defs = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--cov=data --cov=features --cov=models --cov-report=term-missing"

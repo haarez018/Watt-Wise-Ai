@@ -2,9 +2,12 @@
 
 ## Status
 
-This document describes the system as built through **Phase 1 (production scaffolding)**.
-Sections describing the ML pipeline, full API surface, and dashboard UI describe the
-target design for Phases 2–4 and are marked accordingly.
+This document describes the system as built through **Phase 1 (production scaffolding)**
+and **Phase 2 (the ML pipeline, plus one endpoint — `GET /households/{id}/forecast` —
+wired end-to-end to prove the serving pattern before Phase 3's full API surface lands)**.
+Sections describing the full API surface and dashboard UI describe the target design for
+Phases 3–4 and are marked accordingly. See the "ML pipeline (Phase 2)" section below for
+what's actually built, and `ml/MODELS.md` for full per-model detail and honest metrics.
 
 ## Modules
 
@@ -12,6 +15,7 @@ target design for Phases 2–4 and are marked accordingly.
 /frontend    Next.js 14 (App Router), TypeScript strict, Tailwind, shadcn/ui, NextAuth
 /backend     FastAPI, SQLAlchemy 2.0, Alembic, Pydantic v2
 /ml          Training pipeline for the four self-trained models (Phase 2)
+/libs        Shared Python packages used by both /ml and /backend — see "ML pipeline" below
 /data        Raw and processed datasets used to train the models (git-ignored, Phase 2)
 /infra       Deployment configuration for Vercel / Render / Fly.io
 /docs        This directory
@@ -25,11 +29,65 @@ target design for Phases 2–4 and are marked accordingly.
 2. The user enters a one-time appliance inventory and 6–12 months of past bills through
    the onboarding wizard (Phase 4).
 3. On each dashboard load, the frontend calls the backend's forecast, breakdown, anomaly,
-   and recommendation endpoints (Phase 3). The backend loads pre-trained model artifacts
-   from `backend/models/` at process startup and predicts in-process — **no external AI
-   API calls happen on the request path, ever.**
+   and recommendation endpoints. **Only the forecast endpoint exists today** — the rest
+   land in Phase 3, following the same `ModelRegistry` pattern established in Phase 2 (see
+   below). The backend loads pre-trained model artifacts from `backend/models/` once, at
+   process startup, and predicts in-process — **no external AI API calls happen on the
+   request path, ever.**
 4. Recommendations acted upon are tracked in `savings_events`, which powers the
    cumulative impact scoreboard.
+
+## ML pipeline (Phase 2)
+
+Four models, trained offline in `/ml`, served in-process by the backend. Full design
+rationale, features, metrics, and — critically — the honest limitations of validating
+against synthetic data live in `ml/MODELS.md`; this section covers only the serving
+architecture.
+
+**The four models**, each with its own acceptance threshold gating CI (see
+`ml/evaluation/validate.py`):
+
+| Model | Approach | Depends on |
+|---|---|---|
+| Bill Forecaster | XGBoost, point + 80% prediction interval | — |
+| Anomaly Detector | Seasonal residual + robust z-score | Forecaster |
+| Appliance Disaggregator | Per-category XGBoost regression | — |
+| Recommendation Ranker | Rule base + learned XGBoost prioritizer | All three above |
+
+**Serialization contract**: every artifact is a single plain-JSON file
+(`backend/models/<name>_v1.json`) — each model's own native export (XGBoost's
+`Booster.save_raw(raw_format="json")`) as a string value, plus metadata as plain
+dicts/lists. **No pickled Python object, ever.** The backend never imports from `ml`
+to load a model — `backend/app/core/model_registry.py`'s loader functions are a
+from-scratch reimplementation of the same plain-JSON format, and
+`backend/tests/test_model_loading.py` is the test that would fail first if that
+contract were ever broken.
+
+**`ModelRegistry`** (`backend/app/core/model_registry.py`) loads all four artifacts
+once, at process/module import time (not deferred into the ASGI lifespan event, which
+isn't reliably triggered by every ASGI client), and cross-checks each artifact's
+declared `model_version` against `backend/models/models_manifest.json`
+(`ml/evaluation/generate_manifest.py` generates this after training). A load or
+version-mismatch failure fails `/readyz` (503) — **never** `/healthz`: the process is
+still up and shouldn't be restarted, it just shouldn't be routed traffic. See
+`docs/RUNBOOK.md`'s "Retraining and rolling out a new model version" section for the
+operational procedure.
+
+**Shared libraries** (`/libs`): logic and reference data that both the training
+pipeline and the serving endpoint must use identically, so they can never silently
+drift apart:
+
+- `libs/wattwise_tariffs` — the Indian electricity tariff calculator (slab/ToD billing
+  math). Used to compute training-data ground-truth bills, to price every Model 4
+  recommendation candidate, and to compute the forecast endpoint's
+  `predicted_amount_paise` from `predicted_units_wh`.
+- `libs/wattwise_climate` — city→climate-zone and zone→monthly-temperature lookups.
+  Used to build training households and, at serving time, to derive a real household's
+  `zone`/`target_month_temp_c` features from its stored `city` (there is no dedicated
+  `zone` column — see `docs/RUNBOOK.md`'s "known operational quirks").
+
+Both are installed editable (`pip install -e ../libs/<name>`) into both `/ml` and
+`/backend`'s virtualenvs — one implementation, two consumers.
 
 ## Auth
 

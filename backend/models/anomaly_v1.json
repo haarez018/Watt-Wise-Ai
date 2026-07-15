@@ -1,0 +1,12 @@
+{
+  "model_version": "anomaly_v1",
+  "median_residual_ratio": -0.01234437525862554,
+  "mad_residual_ratio": 0.02316335854113722,
+  "z_threshold": 7.5,
+  "seasonal_cutoff": 0.032139010042146934,
+  "severity_bands": {
+    "medium": 1.0,
+    "high": 2.0
+  },
+  "forecaster_version": "forecaster_v1"
+}

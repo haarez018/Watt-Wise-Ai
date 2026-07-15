@@ -27,14 +27,25 @@ backend/.env
 # --- ML ---
 ml/**/__pycache__/
 ml/.venv/
-backend/models/*.pkl
-backend/models/*.joblib
-backend/models/*.pt
-!backend/models/.gitkeep
+ml/.pytest_cache/
+ml/.mypy_cache/
+ml/.ruff_cache/
+ml/.coverage
 ml/data/raw/
-ml/data/processed/*.parquet
-ml/data/processed/*.csv
+ml/data/processed/
 ml/mlruns/
+ml/evaluation/reports/*.json
+
+# Model artifacts ARE committed (see docs/ML.md) — small (<50MB total), keeps
+# CI and deployment deterministic without needing to retrain on every deploy.
+
+# --- Shared libs (libs/wattwise_tariffs, libs/wattwise_climate) ---
+libs/**/__pycache__/
+libs/**/*.egg-info/
+libs/**/.pytest_cache/
+libs/**/.mypy_cache/
+libs/**/.ruff_cache/
+libs/**/.coverage
 
 # --- Env / secrets ---
 .env
